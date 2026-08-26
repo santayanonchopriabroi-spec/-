@@ -1,1 +1,401 @@
-# -
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Home Santayanon Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
+        body { background: #f1f5f9; color: #0f172a; min-height: 100vh; padding: 1rem; display: flex; justify-content: center; }
+        .dashboard { width: 100%; max-width: 1200px; background: #ffffff; border-radius: 32px; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.2rem; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 1rem; }
+        .header h1 { font-size: 1.8rem; font-weight: 700; color: #0284c7; }
+        .live-badge { background: #ffffff; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .indicator-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; display: inline-block; }
+        .live-badge.online { border-color: #86efac; color: #15803d; background: #f0fdf4; }
+        .live-badge.waiting { border-color: #fde047; color: #b45309; background: #fefce8; }
+        .section-title { font-size: 1.1rem; color: #475569; margin-bottom: 1.2rem; font-weight: 700; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
+        @media (min-width: 768px) { .grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; } }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 1.2rem; }
+        .card.active { border-color: #0ea5e9; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.15); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .icon-box { width: 48px; height: 48px; border-radius: 16px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #94a3b8; border: 1px solid #e2e8f0; }
+        .card.active .icon-box { background: #0ea5e9; color: #ffffff; }
+        .advanced-switch { appearance: none; width: 56px; height: 30px; background: #cbd5e1; border-radius: 50px; position: relative; cursor: pointer; outline: none; transition: 0.3s; }
+        .advanced-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background: #ffffff; border-radius: 50%; transition: 0.3s; }
+        .advanced-switch:checked { background: #0ea5e9; }
+        .advanced-switch:checked::after { left: calc(100% - 28px); }
+        .ac-switch:checked { background: #10b981 !important; }
+        .card-title { font-size: 1rem; font-weight: 700; color: #1e293b; }
+        .card-status { font-size: 0.85rem; color: #64748b; font-weight: 500; }
+        .ac-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 28px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; }
+        .ac-card.active { border-color: #10b981; }
+        .ac-top { display: flex; flex-direction: column; gap: 1.5rem; justify-content: space-between; align-items: center; }
+        @media (min-width: 768px) { .ac-top { flex-direction: row; } }
+
+        /* กราฟิกดีไซน์คอยล์เย็น TCL 18,000 BTU */
+        .tcl-indoor-unit {
+            position: relative; width: 270px; height: 110px;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+            border: 2px solid #cbd5e1; border-radius: 14px 14px 26px 26px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            padding: 8px 12px 6px 12px;
+        }
+        .tcl-brand-header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .tcl-logo-box { display: flex; align-items: center; gap: 6px; }
+        .tcl-logo { font-size: 0.95rem; font-weight: 900; color: #dc2626; letter-spacing: 1px; font-family: 'Arial Black', sans-serif; }
+        .tcl-btu-badge { background: #ef4444; color: #ffffff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+        .tcl-digital-display { background: #0f172a; color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 4px; }
+        .tcl-vent-area { width: 100%; height: 38px; background: #1e293b; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #475569; box-shadow: inset 0 4px 6px rgba(0,0,0,0.6); }
+        .crossflow-drum {
+            width: 92%; height: 24px;
+            background: repeating-linear-gradient(90deg, #334155, #334155 3px, #0f172a 3px, #0f172a 7px);
+            border-radius: 12px; position: relative; transform-origin: center; opacity: 0.4; transition: opacity 0.3s;
+        }
+        .ac-card.active .crossflow-drum { opacity: 1; animation: drumRotate 0.6s linear infinite; }
+        @keyframes drumRotate { 0% { filter: brightness(1); } 50% { filter: brightness(1.4); } 100% { filter: brightness(1); } }
+        .airflow-container { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); display: flex; gap: 18px; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
+        .ac-card.active .airflow-container { opacity: 1; }
+        .airflow-wave { font-size: 1.1rem; color: #38bdf8; animation: flow 0.9s ease-in-out infinite alternate; }
+        .airflow-wave:nth-child(2) { animation-delay: 0.2s; }
+        .airflow-wave:nth-child(3) { animation-delay: 0.4s; }
+        .airflow-wave:nth-child(4) { animation-delay: 0.6s; }
+        @keyframes flow { 0% { transform: translateY(0) scale(0.9); opacity: 0.2; } 100% { transform: translateY(14px) scale(1.2); opacity: 1; } }
+
+        .ac-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: 20px; width: 100%; flex-wrap: wrap; }
+        @media (min-width: 768px) { .ac-controls { width: auto; padding: 1.2rem 2rem; border-radius: 60px; flex-wrap: nowrap; } }
+        .real-temp-box, .target-temp-box { display: flex; flex-direction: column; align-items: center; }
+        .real-temp-label, .target-temp-label { font-size: 0.70rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .real-temp-value { font-size: 1.5rem; font-weight: 800; color: #f59e0b; }
+        .real-hum-value { font-size: 1.5rem; font-weight: 800; color: #0ea5e9; }
+        .temp-group { display: flex; align-items: center; gap: 0.8rem; margin-top: 4px; }
+        .temp-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; font-size: 1rem; cursor: pointer; }
+        .temp-display { font-size: 1.5rem; font-weight: 800; color: #1e293b; min-width: 40px; text-align: center; }
+
+        /* การแสดงผลพลังงานและค่าไฟฟ้า */
+        .power-monitor-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 1.2rem; margin-top: 1rem; display: flex; flex-direction: column; gap: 10px; }
+        .power-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 600; color: #475569; }
+        .power-val { font-size: 1.1rem; font-weight: 800; color: #0284c7; }
+        .load-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .load-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #ef4444); transition: width 0.5s ease; }
+
+        .ac-extra-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 1.2rem; }
+        .extra-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 0.8rem; font-size: 0.9rem; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        .extra-btn.active { background: #10b981; color: #ffffff; border-color: #10b981; }
+        .system-log-box { background: #000000; color: #00ff00; border-radius: 20px; padding: 1.2rem; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; line-height: 1.4; min-height: 300px; max-height: 480px; overflow-y: auto; overflow-x: auto; border: 3px solid #334155; }
+        .log-header-title { color: #facc15; font-weight: bold; margin-bottom: 8px; border-bottom: 1px dashed #334155; padding-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1><i class="fa-solid fa-house-chimney"></i> Home Santayanon</h1>
+            <div class="status-container">
+                <div id="connectionStatus" class="live-badge waiting">
+                    <i id="statusIcon" class="fa-solid fa-spinner fa-spin"></i>
+                    <span id="statusText">กำลังเชื่อมต่อ...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title"><i class="fa-solid fa-lightbulb"></i> ระบบไฟ (5 จุด)</div>
+        <div class="grid">
+            <div class="card" id="card-light1"><div class="card-header"><div class="icon-box"><i class="fa-solid fa-couch"></i></div><input type="checkbox" id="light1" class="advanced-switch" onchange="controlLight(1)"></div><div class="card-title">ห้องนั่งเล่น</div><div class="card-status" id="status-light1">ปิด</div></div>
+            <div class="card" id="card-light2"><div class="card-header"><div class="icon-box"><i class="fa-solid fa-bed"></i></div><input type="checkbox" id="light2" class="advanced-switch" onchange="controlLight(2)"></div><div class="card-title">ห้องนอนใหญ่</div><div class="card-status" id="status-light2">ปิด</div></div>
+            <div class="card" id="card-light3"><div class="card-header"><div class="icon-box"><i class="fa-solid fa-utensils"></i></div><input type="checkbox" id="light3" class="advanced-switch" onchange="controlLight(3)"></div><div class="card-title">ห้องครัว</div><div class="card-status" id="status-light3">ปิด</div></div>
+            <div class="card" id="card-light4"><div class="card-header"><div class="icon-box"><i class="fa-solid fa-bath"></i></div><input type="checkbox" id="light4" class="advanced-switch" onchange="controlLight(4)"></div><div class="card-title">ห้องน้ำ</div><div class="card-status" id="status-light4">ปิด</div></div>
+            <div class="card" id="card-light5"><div class="card-header"><div class="icon-box"><i class="fa-solid fa-tree"></i></div><input type="checkbox" id="light5" class="advanced-switch" onchange="controlLight(5)"></div><div class="card-title">ระเบียงหน้าบ้าน</div><div class="card-status" id="status-light5">ปิดใช้งาน</div></div>
+        </div>
+
+        <div class="section-title"><i class="fa-solid fa-snowflake"></i> ระบบปรับอากาศ TCL (18,000 BTU) & พลังงาน</div>
+        <div class="ac-card" id="acCard">
+            <div class="ac-top">
+                <div class="tcl-indoor-unit">
+                    <div class="tcl-brand-header">
+                        <div class="tcl-logo-box">
+                            <span class="tcl-logo">TCL</span>
+                            <span class="tcl-btu-badge">18,000 BTU</span>
+                        </div>
+                        <div class="tcl-digital-display">
+                            <i class="fa-solid fa-snowflake"></i>
+                            <span id="tclDispTemp">--</span>°C
+                        </div>
+                    </div>
+                    <div class="tcl-vent-area">
+                        <div class="crossflow-drum" id="crossflowDrum"></div>
+                    </div>
+                    <div class="airflow-container">
+                        <i class="fa-solid fa-angles-down airflow-wave"></i>
+                        <i class="fa-solid fa-angles-down airflow-wave"></i>
+                        <i class="fa-solid fa-angles-down airflow-wave"></i>
+                        <i class="fa-solid fa-angles-down airflow-wave"></i>
+                    </div>
+                </div>
+
+                <div class="ac-controls">
+                    <div class="real-temp-box"><span class="real-temp-label">อุณหภูมิห้อง</span><span class="real-temp-value" id="realTemp">--°C</span></div>
+                    <div class="real-temp-box"><span class="real-temp-label">ความชื้น</span><span class="real-hum-value" id="realHum">--%</span></div>
+                    <div class="target-temp-box">
+                        <span class="target-temp-label">อุณหภูมิเป้าหมาย</span>
+                        <div class="temp-group">
+                            <button class="temp-btn" onclick="adjustTemp(-1)"><i class="fa-solid fa-minus"></i></button>
+                            <span class="temp-display" id="targetTemp">25</span>
+                            <button class="temp-btn" onclick="adjustTemp(1)"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div><input type="checkbox" id="acToggle" class="advanced-switch ac-switch" onchange="controlAC()"></div>
+                </div>
+            </div>
+
+            <!-- กล่องแสดงมอนิเตอร์กระแส โหลด % พลังงาน kWh และคิดเป็นเงินบาท -->
+            <div class="power-monitor-card">
+                <div class="power-info-row">
+                    <span><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> กระแสไฟฟ้าแอร์ (Current)</span>
+                    <span class="power-val"><span id="acAmpVal">0.00</span> A</span>
+                </div>
+                <div class="power-info-row" style="font-size: 0.8rem;">
+                    <span>ภาระการทำงาน (Load 10A = 100%)</span>
+                    <span id="acLoadPctVal">0%</span>
+                </div>
+                <div class="load-bar-bg">
+                    <div class="load-bar-fill" id="acLoadBar"></div>
+                </div>
+                <!-- ใช้ไปวันนี้ -->
+                <div class="power-info-row" style="margin-top: 6px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+                    <span><i class="fa-solid fa-calendar-day" style="color: #ec4899;"></i> พลังงานวันนี้ (Today Energy)</span>
+                    <span class="power-val" style="color: #ec4899;"><span id="acTodayKwhVal">0.000</span> kWh (<span id="acTodayCostVal">0.00</span> บาท)</span>
+                </div>
+                <!-- สะสมทั้งหมด -->
+                <div class="power-info-row">
+                    <span><i class="fa-solid fa-gauge" style="color: #10b981;"></i> พลังงานสะสมทั้งหมด (Total)</span>
+                    <span class="power-val" style="color: #10b981;"><span id="acKwhVal">0.000</span> kWh (<span id="acTotalCostVal">0.00</span> บาท)</span>
+                </div>
+            </div>
+
+            <div class="ac-extra-features">
+                <button class="extra-btn" id="btnSwing" onclick="toggleACFeature('swing')"><i class="fa-solid fa-arrows-split-up-and-left"></i> สวิง (Swing)</button>
+                <button class="extra-btn" id="btnFan" onclick="cycleFanSpeed()"><i class="fa-solid fa-wind"></i> พัดลม: <span id="fanSpeedText">เบอร์ 2</span></button>
+                <button class="extra-btn" id="btnTurbo" onclick="toggleACFeature('turbo')"><i class="fa-solid fa-gauge-high"></i> เทอร์โบ</button>
+                <button class="extra-btn" id="btnLight" onclick="toggleACFeature('light')"><i class="fa-solid fa-lightbulb"></i> ไฟจอแอร์</button>
+                <button class="extra-btn" id="btnEco" onclick="toggleACFeature('eco')"><i class="fa-solid fa-leaf"></i> ประหยัดไฟ (ECO)</button>
+            </div>
+        </div>
+
+        <div class="section-title"><i class="fa-solid fa-desktop"></i> หน้าจอแสดงผลสถานะจริงจากบอร์ด</div>
+        <div class="system-log-box" id="liveLogContent">
+            <pre style="margin:0; font-family:inherit; color:#facc15;">[SYSTEM] กำลังเชื่อมต่อ EMQX Broker...</pre>
+        </div>
+    </div>
+
+    <script>
+        const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+        const TOPIC_CONTROL = 'santayanon/home/control';
+        const TOPIC_STATUS = 'santayanon/home/status';
+
+        let client;
+        let espTimeout = null;
+        let acDataState = { swing: false, fanSpeed: 2, turbo: false, light: true, eco: false };
+
+        try {
+            client = mqtt.connect(brokerUrl, {
+                clientId: 'web_' + Math.random().toString(16).substr(2, 8),
+                clean: true,
+                connectTimeout: 5000,
+                reconnectPeriod: 2000,
+                keepalive: 30
+            });
+        } catch (e) { console.error(e); }
+
+        if (client) {
+            client.on('connect', () => { client.subscribe(TOPIC_STATUS); });
+            client.on('offline', () => setOfflineUI('ขาดการเชื่อมต่อเครือข่าย'));
+            client.on('error', () => setOfflineUI('เกิดข้อผิดพลาดในการเชื่อมต่อ'));
+
+            client.on('message', (topic, payload) => {
+                if (topic === TOPIC_STATUS) {
+                    clearTimeout(espTimeout);
+                    setConnectedUI();
+
+                    espTimeout = setTimeout(() => { setOfflineUI('บอร์ด ESP32 ออฟไลน์'); }, 8000);
+
+                    try {
+                        const data = JSON.parse(payload.toString());
+
+                        if (data.ac) {
+                            acDataState.swing = !!data.ac.swing;
+                            acDataState.fanSpeed = data.ac.fanSpeed || 2;
+                            acDataState.turbo = !!data.ac.turbo;
+                            acDataState.light = data.ac.light !== undefined ? data.ac.light : true;
+                            acDataState.eco = !!data.ac.eco;
+                            updateACUI();
+                        }
+
+                        if (data.lights) {
+                            for (let i = 0; i < 5; i++) {
+                                const state = !!data.lights[i];
+                                document.getElementById('light' + (i + 1)).checked = state;
+                                const card = document.getElementById('card-light' + (i + 1));
+                                const statusText = document.getElementById('status-light' + (i + 1));
+                                if (state) { card.classList.add('active'); statusText.innerText = 'เปิด'; } 
+                                else { card.classList.remove('active'); statusText.innerText = 'ปิด'; }
+                            }
+                        }
+
+                        if (data.ac) {
+                            const acState = !!data.ac.state;
+                            document.getElementById('acToggle').checked = acState;
+                            const acCard = document.getElementById('acCard');
+                            if (acState) { 
+                                acCard.classList.add('active'); 
+                                document.getElementById('tclDispTemp').innerText = data.ac.targetTemp || 25;
+                            } else { 
+                                acCard.classList.remove('active'); 
+                                document.getElementById('tclDispTemp').innerText = '--';
+                            }
+                            document.getElementById('targetTemp').innerText = data.ac.targetTemp || 25;
+                            document.getElementById('realTemp').innerText = (data.ac.realTemp !== undefined ? data.ac.realTemp.toFixed(1) : '0.0') + '°C';
+                            document.getElementById('realHum').innerText = (data.ac.realHumidity !== undefined ? data.ac.realHumidity.toFixed(1) : '0.0') + '%';
+                            
+                            let amp = data.ac.currentAmp !== undefined ? data.ac.currentAmp : 0.0;
+                            let pct = data.ac.loadPercent !== undefined ? data.ac.loadPercent : 0.0;
+                            let todayKwh = data.ac.todayKwh !== undefined ? data.ac.todayKwh : 0.000;
+                            let kwh = data.ac.kwh !== undefined ? data.ac.kwh : 0.000;
+                            let todayCost = data.ac.todayCost !== undefined ? data.ac.todayCost : 0.00;
+                            let totalCost = data.ac.totalCost !== undefined ? data.ac.totalCost : 0.00;
+
+                            document.getElementById('acAmpVal').innerText = amp.toFixed(2);
+                            document.getElementById('acLoadPctVal').innerText = pct.toFixed(0) + '%';
+                            document.getElementById('acLoadBar').style.width = pct + '%';
+                            document.getElementById('acTodayKwhVal').innerText = todayKwh.toFixed(3);
+                            document.getElementById('acTodayCostVal').innerText = todayCost.toFixed(2);
+                            document.getElementById('acKwhVal').innerText = kwh.toFixed(3);
+                            document.getElementById('acTotalCostVal').innerText = totalCost.toFixed(2);
+                        }
+
+                        // แสดงผลมอนิเตอร์รูปแบบ Ladder Diagram ในช่อง Log
+                        const l1_st = data.lights && data.lights[0] ? '[ ON  ]' : '[ OFF ]';
+                        const l2_st = data.lights && data.lights[1] ? '[ ON  ]' : '[ OFF ]';
+                        const l3_st = data.lights && data.lights[2] ? '[ ON  ]' : '[ OFF ]';
+                        const l4_st = data.lights && data.lights[3] ? '[ ON  ]' : '[ OFF ]';
+                        const l5_st = data.lights && data.lights[4] ? '[ ON  ]' : '[ OFF ]';
+                        const ac_st = data.ac && data.ac.state ? '[ ON  ]' : '[ OFF ]';
+
+                        const rTemp = (data.ac && data.ac.realTemp !== undefined ? data.ac.realTemp.toFixed(1) : '0.0').padStart(5);
+                        const rHum = (data.ac && data.ac.realHumidity !== undefined ? data.ac.realHumidity.toFixed(1) : '0.0').padStart(5);
+                        const cAmp = (data.ac && data.ac.currentAmp !== undefined ? data.ac.currentAmp.toFixed(2) : '0.00').padStart(6);
+                        const lPct = (data.ac && data.ac.loadPercent !== undefined ? data.ac.loadPercent.toFixed(1) : '0.0').padStart(5);
+                        const tKwh = (data.ac && data.ac.todayKwh !== undefined ? data.ac.todayKwh.toFixed(3) : '0.000').padStart(6);
+                        const tCost = (data.ac && data.ac.todayCost !== undefined ? data.ac.todayCost.toFixed(2) : '0.00').padStart(6);
+                        const totKwh = (data.ac && data.ac.kwh !== undefined ? data.ac.kwh.toFixed(3) : '0.000').padStart(6);
+                        const totCost = (data.ac && data.ac.totalCost !== undefined ? data.ac.totalCost.toFixed(2) : '0.00').padStart(6);
+                        const tTemp = String(data.ac && data.ac.targetTemp ? data.ac.targetTemp : 25).padStart(2);
+                        const fSpd = data.ac && data.ac.fanSpeed ? data.ac.fanSpeed : 2;
+                        const swg = acDataState.swing ? 'ON' : 'OFF';
+                        const trb = acDataState.turbo ? 'ON' : 'OFF';
+
+                        const logBox = document.getElementById('liveLogContent');
+                        logBox.innerHTML = `<pre style="margin:0; font-family:inherit; white-space:pre; color:#00ff00;">
+|=================================================================================|
+|                     OMRON LADDER DIAGRAM MONITOR (MAIN PROGRAM)                 |
+|=================================================================================|
+  POWER RAIL (L1)                                                  POWER RAIL (N)
+    ||                                                                   ||
+    ||--[ CIO 000.0 ]--------------------------------------------( OUT1 )--||  (ห้องนั่งเล่น)
+    ||     ${l1_st}                                                 ${l1_st} ||
+    ||                                                                   ||
+    ||--[ CIO 000.1 ]--------------------------------------------( OUT2 )--||  (ห้องนอนใหญ่)
+    ||     ${l2_st}                                                 ${l2_st} ||
+    ||                                                                   ||
+    ||--[ CIO 000.2 ]--------------------------------------------( OUT3 )--||  (ห้องครัว)
+    ||     ${l3_st}                                                 ${l3_st} ||
+    ||                                                                   ||
+    ||--[ CIO 000.3 ]--------------------------------------------( OUT4 )--||  (ห้องน้ำ)
+    ||     ${l4_st}                                                 ${l4_st} ||
+    ||                                                                   ||
+    ||--[ CIO 000.4 ]--------------------------------------------( OUT5 )--||  (ระเบียงหน้าบ้าน)
+    ||     ${l5_st}                                                 ${l5_st} ||
+    ||                                                                   ||
+    ||--[ CIO 010.0 ]--------------------------------------------( AC_ON )-||  (แอร์ TCL 18K BTU)
+    ||     ${ac_st}                                                 ${ac_st} ||
+    ||                                                                   ||
+    ||======================= ANALOG & DATA REGISTERS ===================||
+    ||                                                                   ||
+    ||---[ READ_DHT22 ]--------[ D100:${rTemp} °C ]--------[ D102:${rHum} % ]---||  (อุณหภูมิ/ความชื้น)
+    ||                                                                   ||
+    ||---[ READ_CURRENT ]------[ D104:${cAmp} A ]--------[ D106:${lPct} % ]---||  (กระแส/ภาระโหลด)
+    ||                                                                   ||
+    ||---[ CALC_TODAY ]--------[ D108:${tKwh} kWh ]------[ D110:${tCost} THB ]--||  (หน่วยไฟ/ค่าไฟวันนี้)
+    ||                                                                   ||
+    ||---[ CALC_TOTAL ]--------[ D112:${totKwh} kWh ]------[ D114:${totCost} THB ]--||  (หน่วยไฟ/ค่าไฟรวม)
+    ||                                                                   ||
+    ||---[ AC_SETTINGS ]-------[ SET_TEMP: ${tTemp} °C ]------[ FAN_SPD: ${fSpd} ]------||  [SWING:${swg}][TURBO:${trb}]
+    ||                                                                   ||
+|=================================================================================|</pre>`;
+                    } catch (e) { console.error(e); }
+                }
+            });
+        }
+
+        function updateACUI() {
+            document.getElementById('btnSwing').classList.toggle('active', acDataState.swing);
+            document.getElementById('fanSpeedText').innerText = 'เบอร์ ' + acDataState.fanSpeed;
+            document.getElementById('btnFan').classList.toggle('active', acDataState.fanSpeed > 1);
+            document.getElementById('btnTurbo').classList.toggle('active', acDataState.turbo);
+            document.getElementById('btnLight').classList.toggle('active', acDataState.light);
+            document.getElementById('btnEco').classList.toggle('active', acDataState.eco);
+
+            const drumSpeedSec = acDataState.fanSpeed === 1 ? '0.8s' : (acDataState.fanSpeed === 2 ? '0.4s' : '0.18s');
+            const drum = document.getElementById('crossflowDrum');
+            if (drum) { drum.style.animationDuration = drumSpeedSec; }
+        }
+
+        function toggleACFeature(feature) {
+            acDataState[feature] = !acDataState[feature];
+            client.publish(TOPIC_CONTROL, `ac_${feature}:${acDataState[feature] ? 1 : 0}`);
+            updateACUI();
+        }
+
+        function cycleFanSpeed() {
+            acDataState.fanSpeed = (acDataState.fanSpeed % 3) + 1;
+            client.publish(TOPIC_CONTROL, `ac_fanspeed:${acDataState.fanSpeed}`);
+            updateACUI();
+        }
+
+        function setConnectedUI() {
+            document.getElementById('connectionStatus').className = 'live-badge online';
+            document.getElementById('statusIcon').className = 'indicator-dot';
+            document.getElementById('statusText').innerText = 'เชื่อมต่อแล้ว';
+        }
+
+        function setOfflineUI(reason) {
+            document.getElementById('connectionStatus').className = 'live-badge waiting';
+            document.getElementById('statusIcon').className = 'fa-solid fa-spinner fa-spin';
+            document.getElementById('statusText').innerText = 'รอสัญญาณ...';
+            document.getElementById('liveLogContent').innerHTML = `<pre style="color: #ef4444; font-weight: bold; margin:0; font-family:inherit;">[WARNING] ${reason}</pre>`;
+        }
+
+        function controlLight(index) {
+            const state = document.getElementById('light' + index).checked ? 1 : 0;
+            client.publish(TOPIC_CONTROL, `light${index}:${state}`);
+        }
+
+        function controlAC() {
+            const state = document.getElementById('acToggle').checked ? 1 : 0;
+            client.publish(TOPIC_CONTROL, `ac:${state}`);
+        }
+
+        let currentTemp = 25;
+        function adjustTemp(change) {
+            currentTemp = Math.min(Math.max(currentTemp + change, 16), 30);
+            document.getElementById('targetTemp').innerText = currentTemp;
+            client.publish(TOPIC_CONTROL, `ac_temp:${currentTemp}`);
+        }
+    </script>
+</body>
+</html>
