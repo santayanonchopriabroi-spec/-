@@ -25,7 +25,6 @@
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 1rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
         
-        /* 🌟 เอฟเฟกต์แสงสะท้อนและเรืองแสง เมื่อการ์ดไฟเปิด (ACTIVE) */
         .card.active { 
             border-color: #0ea5e9; 
             background: linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%);
@@ -51,7 +50,6 @@
         .card-status { font-size: 0.8rem; color: #64748b; font-weight: 500; transition: 0.3s; }
         .card.active .card-status { color: #0284c7; font-weight: 600; text-shadow: 0 0 8px rgba(14,165,233,0.3); }
         
-        /* 🌟 เอฟเฟกต์แสงสะท้อนและเรืองแสง เมื่อการ์ดแอร์เปิด (ACTIVE) */
         .ac-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 1.2rem; display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.5rem; transition: all 0.3s ease; position: relative; }
         .ac-card.active { 
             border-color: #10b981; 
@@ -197,7 +195,7 @@
                 </div>
             </div>
 
-            <!-- กล่องแสดงมอนิเตอร์ แรงดัน, กระแส, โหลด %, พลังงาน kWh และคิดเป็นเงินบาท -->
+            <!-- กล่องแสดงมอนิเตอร์ แรงดัน, กระแส, โหลด % (12A = 100%), พลังงาน kWh และคิดเป็นเงินบาท -->
             <div class="power-monitor-card">
                 <div class="power-info-row">
                     <span><i class="fa-solid fa-plug" style="color: #0284c7;"></i> แรงดัน</span>
@@ -208,18 +206,16 @@
                     <span class="power-val"><span id="acAmpVal">0.00</span> A</span>
                 </div>
                 <div class="power-info-row" style="font-size: 0.78rem;">
-                    <span>ภาระการทำงาน (Load 10A = 100%)</span>
+                    <span>ภาระการทำงาน (Load 12A = 100%)</span>
                     <span id="acLoadPctVal">0%</span>
                 </div>
                 <div class="load-bar-bg">
                     <div class="load-bar-fill" id="acLoadBar"></div>
                 </div>
-                <!-- ใช้ไปวันนี้ -->
                 <div class="power-info-row" style="margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
                     <span><i class="fa-solid fa-calendar-day" style="color: #ec4899;"></i> พลังงานวันนี้ (Today Energy)</span>
                     <span class="power-val" style="color: #ec4899;"><span id="acTodayKwhVal">0.000</span> kWh (<span id="acTodayCostVal">0.00</span> บาท)</span>
                 </div>
-                <!-- สะสมทั้งหมด -->
                 <div class="power-info-row">
                     <span><i class="fa-solid fa-gauge" style="color: #10b981;"></i> พลังงานสะสมทั้งหมด (Total)</span>
                     <span class="power-val" style="color: #10b981;"><span id="acKwhVal">0.000</span> kWh (<span id="acTotalCostVal">0.00</span> บาท)</span>
@@ -248,4 +244,10 @@
 
         let client;
         let espTimeout = null;
-        let acDataState = { swing: false, fanSpeed: 2, turbo: false, light: 
+        let acDataState = { swing: false, fanSpeed: 2, turbo: false, light: true, eco: false };
+
+        try {
+            client = mqtt.connect(brokerUrl, {
+                clientId: 'web_' + Math.random().toString(16).substr(2, 8),
+                clean: true,
+                conn
