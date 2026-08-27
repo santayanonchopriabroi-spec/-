@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<html lang="th" style="margin:0;padding:0;">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Home Santayanon - Sport SCADA Edition</title>
+<html style="margin:0;padding:0;">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-<style>
+<script>
+(function(){
+  var s = document.createElement('style');
+  s.textContent = `
     :root {
       --bg: #f1f5f9;
       --card: #ffffff;
@@ -31,7 +28,7 @@
       --carbon: #0a0a0a;
       --carbon-light: #1a1a1a;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: 
         radial-gradient(900px 500px at 100% 0%, rgba(220,38,38,0.06), transparent 60%),
@@ -39,7 +36,7 @@
         linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
       color: var(--text);
       font-family: 'Kanit', sans-serif;
-      padding: 0.8rem;
+      padding: 1rem;
       display: flex;
       justify-content: center;
       min-height: 100vh;
@@ -47,18 +44,20 @@
     .dashboard {
       width: 100%;
       max-width: 1300px;
-      background: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.9);
       backdrop-filter: blur(15px);
       border-radius: 28px;
-      padding: 1.5rem;
+      padding: 2rem;
       border: 2px solid rgba(255,255,255,0.8);
-      box-shadow: 0 30px 80px rgba(15,23,42,0.1), 0 0 0 1px var(--border);
+      box-shadow: 0 30px 80px rgba(15,23,42,0.1), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255,255,255,0.9);
       position: relative;
     }
     .dashboard::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 5px;
       background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
       border-radius: 28px 28px 0 0;
@@ -67,332 +66,585 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1.2rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
       border-bottom: 3px solid var(--carbon);
       flex-wrap: wrap;
       gap: 1rem;
       position: relative;
     }
-    .brand-title { display: flex; align-items: center; gap: 14px; }
+    .sport-header::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 120px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .brand-title { display: flex; align-items: center; gap: 16px; }
     .brand-logo {
-      width: 54px; height: 54px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--carbon) 0%, #2d2d2d 100%);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; color: var(--accent2);
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--carbon) 0%, #2d2d2d 50%, var(--carbon) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: var(--accent2);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
       border: 2px solid #3a3a3a;
+      position: relative;
+    }
+    .brand-logo::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
     }
     .brand-text h1 {
       font-family: 'Orbitron', sans-serif;
-      font-size: 1.5rem; font-weight: 900;
-      color: var(--carbon);
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      background: linear-gradient(180deg, var(--text) 0%, #475569 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
       line-height: 1.1;
     }
     .brand-text .sub {
       font-family: 'Orbitron', sans-serif;
-      font-size: 0.65rem; font-weight: 700;
-      color: var(--accent); letter-spacing: 0.15em;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 4px;
     }
     .status-badge {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0.6rem 1.2rem; border-radius: 50px;
-      font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .status-badge .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .status-connecting { background: #fef3c7; border: 2px solid var(--warning); color: #92400e; }
-    .status-connecting .dot { background: var(--warning); }
-    .status-online { background: #dcfce7; border: 2px solid var(--success); color: #14532d; }
+    .status-badge .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      position: relative;
+    }
+    .status-badge .dot::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      opacity: 0.4;
+    }
+    .status-connecting {
+      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      border: 2px solid var(--warning);
+      color: #92400e;
+      box-shadow: 0 4px 20px var(--warning-soft);
+    }
+    .status-connecting .dot { background: var(--warning); animation: blink 0.8s ease-in-out infinite; }
+    .status-connecting .dot::after { background: var(--warning); animation: pulse-ring 1.5s ease-out infinite; }
+    .status-online {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 2px solid var(--success);
+      color: #14532d;
+      box-shadow: 0 4px 20px var(--success-soft);
+    }
     .status-online .dot { background: var(--success); }
-    .status-offline { background: #fee2e2; border: 2px solid var(--danger); color: #7f1d1d; }
+    .status-online .dot::after { background: var(--success); animation: pulse-ring 2s ease-out infinite; }
+    .status-offline {
+      background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      border: 2px solid var(--danger);
+      color: #7f1d1d;
+      box-shadow: 0 4px 20px var(--danger-soft);
+    }
     .status-offline .dot { background: var(--danger); }
-
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    @keyframes pulse-ring { 0%{transform:scale(0.8);opacity:0.5;} 100%{transform:scale(2);opacity:0;} }
     .section-title {
-      font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 800;
-      color: var(--carbon); margin-bottom: 1.2rem; text-transform: uppercase;
-      letter-spacing: 0.1em; display: flex; align-items: center; gap: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--carbon);
+      margin-bottom: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .section-title i { color: var(--accent); }
-
-    .light-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, var(--carbon) 0px, var(--carbon) 10px, transparent 10px, transparent 16px);
+      opacity: 0.3;
     }
-    @media (min-width: 768px) { .light-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
-
+    .light-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 3rem;
+    }
+    @media (min-width: 768px) {
+      .light-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+    }
     .light-card {
-      background: var(--card); border: 2px solid var(--border);
-      border-radius: 20px; padding: 1rem; transition: all 0.3s ease;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 1.3rem;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .light-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--muted), #cbd5e1);
+      transition: background 0.3s ease;
+    }
+    .light-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+      box-shadow: 0 15px 40px rgba(220,38,38,0.1);
     }
     .light-card.active {
       border-color: var(--accent);
       background: linear-gradient(160deg, #ffffff 0%, #fef2f2 100%);
-      box-shadow: 0 10px 25px var(--accent-soft);
+      box-shadow: 0 15px 40px var(--accent-soft);
     }
-    .light-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+    .light-card.active::before { background: linear-gradient(180deg, var(--accent), var(--accent2)); }
+    .light-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
     .light-icon-wrap {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: #f1f5f9; border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; color: var(--muted);
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: var(--muted);
+      transition: all 0.4s ease;
+      position: relative;
     }
-    .light-card.active .light-icon-wrap { background: var(--accent); color: white; border-color: transparent; }
-
+    .light-card.active .light-icon-wrap {
+      background: linear-gradient(135deg, var(--accent), #b91c1c);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 6px 20px var(--accent-soft), 0 0 30px rgba(250,204,21,0.3);
+      transform: rotate(-5deg) scale(1.05);
+    }
+    .light-glow {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(250,204,21,0.6) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .light-card.active .light-glow {
+      opacity: 1;
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+    @keyframes glow-pulse {
+      0%,100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
     .sport-switch {
-      appearance: none; width: 52px; height: 28px;
-      background: #cbd5e1; border-radius: 50px; position: relative; cursor: pointer; outline: none; transition: 0.3s;
+      appearance: none;
+      width: 64px;
+      height: 32px;
+      background: linear-gradient(135deg, #94a3b8, #cbd5e1);
+      border-radius: 50px;
+      position: relative;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s ease;
+      border: 2px solid var(--border);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
     }
     .sport-switch::after {
-      content: ''; position: absolute; top: 2px; left: 2px;
-      width: 24px; height: 24px; background: #ffffff; border-radius: 50%; transition: 0.3s;
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #ffffff, #f1f5f9);
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
     }
-    .sport-switch:checked { background: var(--accent); }
-    .sport-switch:checked::after { left: calc(100% - 26px); }
-    .ac-switch:checked { background: var(--success) !important; }
-
-    .light-name { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--carbon); }
-    .light-status { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .sport-switch:checked {
+      background: linear-gradient(90deg, var(--accent), #b91c1c);
+      border-color: var(--accent);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 0 15px var(--accent-soft);
+    }
+    .sport-switch:checked::after {
+      left: calc(100% - 26px);
+      background: linear-gradient(135deg, #ffffff, #fef2f2);
+    }
+    .light-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--carbon);
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+    .light-status {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .light-status .s-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: all 0.3s ease;
+    }
     .light-card.active .light-status { color: var(--accent); }
-
-    /* AC Section */
+    .light-card.active .light-status .s-dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
     .ac-main-card {
-      background: var(--card); border: 2px solid var(--border);
-      border-radius: 24px; padding: 1.5rem; margin-bottom: 2rem;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 28px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.5s ease;
     }
-    .ac-main-card.active { border-color: var(--success); }
-    .ac-unit-section { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
-    @media (min-width: 900px) { .ac-unit-section { flex-direction: row; justify-content: space-between; } }
-
+    .ac-main-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--carbon), var(--accent), var(--accent2), var(--accent), var(--carbon));
+    }
+    .ac-main-card.active {
+      border-color: var(--success);
+      box-shadow: 0 25px 60px var(--success-soft), 0 0 0 1px var(--success);
+    }
+    .ac-unit-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 1100px) {
+      .ac-unit-section {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+      }
+    }
+    .tcl-unit-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .tcl-model-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.4rem 1rem;
+      background: linear-gradient(135deg, var(--accent-soft), var(--accent2-soft));
+      border: 1px solid var(--border);
+      border-radius: 50px;
+    }
     .tcl-indoor-unit {
-      width: 280px; height: 110px;
-      background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
-      border: 2px solid #94a3b8; border-radius: 14px 14px 24px 24px;
-      display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-      padding: 10px 14px; position: relative;
+      position: relative;
+      width: 340px;
+      height: 140px;
+      background: linear-gradient(180deg, #fafbfc 0%, #e8ecf1 40%, #c9d1d9 100%);
+      border: 3px solid #8b949e;
+      border-radius: 20px 20px 40px 40px;
+      box-shadow: 0 20px 50px rgba(15,23,42,0.18), inset 0 3px 6px rgba(255,255,255,0.95), inset 0 -5px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px 10px 18px;
+      transition: all 0.5s ease;
     }
-    .tcl-top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
-    .tcl-brand { font-family: 'Arial Black', sans-serif; font-size: 1rem; color: #dc2626; }
+    .ac-main-card.active .tcl-indoor-unit {
+      box-shadow: 0 20px 50px rgba(15,23,42,0.18), inset 0 3px 6px rgba(255,255,255,0.95), inset 0 -5px 12px rgba(0,0,0,0.1), 0 0 40px var(--success-soft);
+    }
+    .tcl-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tcl-brand {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #dc2626;
+      letter-spacing: 2px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .tcl-sub {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      color: #64748b;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-top: 2px;
+    }
     .tcl-display {
-      background: #050810; color: #38bdf8; padding: 2px 8px; border-radius: 6px;
-      font-family: 'Courier New', monospace; font-size: 0.85rem; font-weight: bold;
+      background: linear-gradient(180deg, #050810 0%, #0d1525 100%);
+      color: #38bdf8;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px solid #1e3a5f;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.9), 0 0 15px rgba(56,189,248,0.3);
+      text-shadow: 0 0 10px #38bdf8;
+      min-width: 90px;
+      justify-content: center;
     }
     .tcl-vent {
-      width: 100%; height: 38px; background: #0f172a; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      width: 100%;
+      height: 56px;
+      background: linear-gradient(180deg, #121826 0%, #050810 100%);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #2d3a4f;
+      box-shadow: inset 0 6px 15px rgba(0,0,0,0.95), inset 0 -1px 3px rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .crossflow-fan {
+      width: 94%;
+      height: 42px;
+      position: relative;
+      border-radius: 21px;
+      overflow: hidden;
+      background: #0a0f1a;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
     }
     .crossflow-drum {
-      width: 92%; height: 24px;
-      background: repeating-linear-gradient(90deg, #334155 0px, #334155 3px, #0f172a 3px, #0f172a 7px);
-      border-radius: 12px; opacity: 0.3;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(90deg, #1e293b 0px, #1e293b 2px, #334155 2px, #334155 5px, #475569 5px, #475569 6px, #334155 6px, #334155 9px);
+      background-size: 36px 100%;
+      border-radius: 21px;
+      opacity: 0.25;
+      transition: opacity 0.4s ease;
     }
-    .ac-main-card.active .crossflow-drum { opacity: 1; animation: drumRotate 0.6s linear infinite; }
-    @keyframes drumRotate { 0% { filter: brightness(1); } 50% { filter: brightness(1.4); } 100% { filter: brightness(1); } }
+    .ac-main-card.active .crossflow-drum { opacity: 1; }
+    .fan-speed-1 .crossflow-drum { animation: crossflow-spin 1.5s linear infinite; }
+    .fan-speed-2 .crossflow-drum { animation: crossflow-spin 0.8s linear infinite; }
+    .fan-speed-3 .crossflow-drum { animation: crossflow-spin 0.4s linear infinite; }
+    .fan-speed-turbo .crossflow-drum { animation: crossflow-spin 0.18s linear infinite; }
+    @keyframes crossflow-spin {
+      from { background-position: 0 0; }
+      to { background-position: 36px 0; }
+    }
+    .air-waves {
+      position: absolute;
+      bottom: -45px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 28px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .ac-main-card.active .air-waves { opacity: 1; }
+    .wave {
+      font-size: 1.5rem;
+      color: var(--info);
+      animation: wave-flow 0.9s ease-in-out infinite alternate;
+      text-shadow: 0 0 12px var(--info-soft);
+    }
+    .wave:nth-child(2) { animation-delay: 0.15s; }
+    .wave:nth-child(3) { animation-delay: 0.3s; }
+    .wave:nth-child(4) { animation-delay: 0.45s; }
+    .wave:nth-child(5) { animation-delay: 0.6s; }
+    @keyframes wave-flow {
+      0% { transform: translateY(0) scale(0.8); opacity: 0.3; }
+      100% { transform: translateY(25px) scale(1.5); opacity: 1; }
+    }
 
-    /* Sport Gauges */
-    .gauges-section { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; width: 100%; max-width: 500px; }
+    /* ===== เกจวัดสปอร์ตสไตล์ใหม่ ตามภาพตัวอย่าง ===== */
+    .gauges-section {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      flex: 1;
+      width: 100%;
+      max-width: 560px;
+    }
+    @media (max-width: 650px) {
+      .gauges-section { grid-template-columns: 1fr; }
+    }
     .sport-gauge-card {
       background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
-      border-radius: 20px; padding: 1rem; border: 2px solid #2a2a2a; text-align: center;
+      border-radius: 24px;
+      padding: 1.5rem 1rem 1rem;
+      border: 3px solid #2a2a2a;
+      box-shadow: 
+        0 15px 40px rgba(0,0,0,0.4),
+        inset 0 2px 0 rgba(255,255,255,0.05),
+        inset 0 -2px 10px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
     }
-    .gauge-title { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: #94a3b8; letter-spacing: 0.15em; }
-    .gauge-big-number { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 900; margin-top: 4px; }
+    .sport-gauge-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .sport-gauge-card.load-gauge::after {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #16a34a, transparent);
+      border-radius: 2px;
+      box-shadow: 0 0 10px rgba(22,163,74,0.5);
+    }
+    .sport-gauge-card.amp-gauge::after {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #0284c7, transparent);
+      border-radius: 2px;
+      box-shadow: 0 0 10px rgba(2,132,199,0.5);
+    }
+    .gauge-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #64748b;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    .gauge-svg-container {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sport-gauge-svg {
+      width: 100%;
+      max-width: 240px;
+      height: auto;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    }
+    .gauge-center-value {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 2;
+    }
+    .gauge-big-number {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 0 15px currentColor;
+      letter-spacing: -0.02em;
+    }
     .gauge-big-number.load { color: #4ade80; }
     .gauge-big-number.amp { color: #38bdf8; }
-    .gauge-unit-label { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #64748b; }
-
-    /* Sensor & AC Extra Buttons */
-    .ac-controls-bar {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around;
-      gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: 18px; margin-top: 1rem; border: 1px solid var(--border);
+    .gauge-unit-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 3px;
     }
-    .temp-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #cbd5e1; background: #fff; font-weight: bold; cursor: pointer; }
-    .temp-btn:active { background: #e2e8f0; }
-
-    .ac-extra-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 1rem; }
-    .extra-btn {
-      background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
-      padding: 0.7rem; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+    .sensor-readings {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
     }
-    .extra-btn.active { background: var(--success); color: white; border-color: var(--success); }
-
-    /* Power Monitor Cards */
-    .power-monitor-card {
-      background: #f8fafc; border: 1px solid var(--border); border-radius: 18px; padding: 1rem; margin-top: 1rem;
-      display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; font-weight: 600;
-    }
-    .power-val { font-family: 'Orbitron', sans-serif; font-weight: 800; color: var(--info); }
-
-    /* Omron PLC Ladder Monitor (Black Text) */
-    .system-log-box {
-      background: #f8fafc; color: #000000; border-radius: 18px; padding: 1rem;
-      font-family: 'Courier New', Courier, monospace; font-size: 0.75rem; line-height: 1.35;
-      min-height: 260px; max-height: 450px; overflow-y: auto; overflow-x: auto;
-      border: 2px solid #cbd5e1; -webkit-overflow-scrolling: touch;
-    }
-</style>
-</head>
-<body>
-    <div class="dashboard">
-        <!-- Header -->
-        <div class="sport-header">
-            <div class="brand-title">
-                <div class="brand-logo"><i class="fa-solid fa-microchip"></i></div>
-                <div class="brand-text">
-                    <h1>SANTAYANON</h1>
-                    <div class="sub">OMRON PLC & SCADA SYSTEM</div>
-                </div>
-            </div>
-            <div id="connectionStatus" class="status-badge status-connecting">
-                <span class="dot"></span>
-                <span id="statusText">CONNECTING...</span>
-            </div>
-        </div>
-
-        <!-- Section 1: Digital Outputs (Lights) -->
-        <div class="section-title"><i class="fa-solid fa-bolt"></i> DIGITAL OUTPUTS (CIO 000)</div>
-        <div class="light-grid">
-            <div class="light-card" id="card-light1">
-                <div class="light-card-header">
-                    <div class="light-icon-wrap"><i class="fa-solid fa-couch"></i></div>
-                    <input type="checkbox" id="light1" class="sport-switch" onchange="controlLight(1)">
-                </div>
-                <div class="light-name">CIO 000.0</div>
-                <div class="light-status" id="status-light1">ห้องนั่งเล่น: ปิด</div>
-            </div>
-            <div class="light-card" id="card-light2">
-                <div class="light-card-header">
-                    <div class="light-icon-wrap"><i class="fa-solid fa-bed"></i></div>
-                    <input type="checkbox" id="light2" class="sport-switch" onchange="controlLight(2)">
-                </div>
-                <div class="light-name">CIO 000.1</div>
-                <div class="light-status" id="status-light2">ห้องนอนใหญ่: ปิด</div>
-            </div>
-            <div class="light-card" id="card-light3">
-                <div class="light-card-header">
-                    <div class="light-icon-wrap"><i class="fa-solid fa-utensils"></i></div>
-                    <input type="checkbox" id="light3" class="sport-switch" onchange="controlLight(3)">
-                </div>
-                <div class="light-name">CIO 000.2</div>
-                <div class="light-status" id="status-light3">ห้องครัว: ปิด</div>
-            </div>
-            <div class="light-card" id="card-light4">
-                <div class="light-card-header">
-                    <div class="light-icon-wrap"><i class="fa-solid fa-bath"></i></div>
-                    <input type="checkbox" id="light4" class="sport-switch" onchange="controlLight(4)">
-                </div>
-                <div class="light-name">CIO 000.3</div>
-                <div class="light-status" id="status-light4">ห้องน้ำ: ปิด</div>
-            </div>
-            <div class="light-card" id="card-light5">
-                <div class="light-card-header">
-                    <div class="light-icon-wrap"><i class="fa-solid fa-tree"></i></div>
-                    <input type="checkbox" id="light5" class="sport-switch" onchange="controlLight(5)">
-                </div>
-                <div class="light-name">CIO 000.4</div>
-                <div class="light-status" id="status-light5">ระเบียง: ปิด</div>
-            </div>
-        </div>
-
-        <!-- Section 2: AC & Energy Monitor -->
-        <div class="section-title"><i class="fa-solid fa-snowflake"></i> AC TCL 18,000 BTU & PROCESS MONITOR</div>
-        <div class="ac-main-card" id="acCard">
-            <div class="ac-unit-section">
-                <!-- TCL Graphic Unit -->
-                <div class="tcl-indoor-unit">
-                    <div class="tcl-top">
-                        <span class="tcl-brand">TCL</span>
-                        <div class="tcl-display"><i class="fa-solid fa-snowflake"></i> <span id="tclDispTemp">--</span>°C</div>
-                    </div>
-                    <div class="tcl-vent">
-                        <div class="crossflow-drum"></div>
-                    </div>
-                </div>
-
-                <!-- Gauges -->
-                <div class="gauges-section">
-                    <div class="sport-gauge-card">
-                        <div class="gauge-title">AC LOAD % (D106)</div>
-                        <div class="gauge-big-number load" id="acLoadPctVal">0%</div>
-                        <div class="gauge-unit-label">MAX 10.0A</div>
-                    </div>
-                    <div class="sport-gauge-card">
-                        <div class="gauge-title">CURRENT (D104)</div>
-                        <div class="gauge-big-number amp" id="acAmpVal">0.00</div>
-                        <div class="gauge-unit-label">AMPERES (A)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AC Controls Bar -->
-            <div class="ac-controls-bar">
-                <div>
-                    <span style="font-size:0.7rem; color:var(--muted); display:block;">CIO 010.0 MAIN AC</span>
-                    <input type="checkbox" id="acToggle" class="sport-switch ac-switch" onchange="controlAC()">
-                </div>
-                <div style="text-align:center;">
-                    <span style="font-size:0.7rem; color:var(--muted); display:block;">D100 TEMP</span>
-                    <span style="font-size:1.2rem; font-weight:bold; color:var(--warning);" id="realTemp">--°C</span>
-                </div>
-                <div style="text-align:center;">
-                    <span style="font-size:0.7rem; color:var(--muted); display:block;">D102 HUMIDITY</span>
-                    <span style="font-size:1.2rem; font-weight:bold; color:var(--info);" id="realHum">--%</span>
-                </div>
-                <div style="text-align:center;">
-                    <span style="font-size:0.7rem; color:var(--muted); display:block;">SET TEMP (SV)</span>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <button class="temp-btn" onclick="adjustTemp(-1)">-</button>
-                        <span style="font-size:1.2rem; font-weight:bold;" id="targetTemp">25</span>
-                        <button class="temp-btn" onclick="adjustTemp(1)">+</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Power Calculations -->
-            <div class="power-monitor-card">
-                <div style="display:flex; justify-content:space-between;">
-                    <span><i class="fa-solid fa-bolt" style="color:var(--warning);"></i> แรงดันไฟฟ้า (Voltage D103):</span>
-                    <span class="power-val"><span id="acVoltVal">220.0</span> V</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; border-top:1px dashed #cbd5e1; padding-top:6px;">
-                    <span><i class="fa-solid fa-calendar-day" style="color:#ec4899;"></i> พลังงานวันนี้ (D108 / D110):</span>
-                    <span class="power-val" style="color:#ec4899;"><span id="acTodayKwhVal">0.000</span> kWh (<span id="acTodayCostVal">0.00</span> บาท)</span>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span><i class="fa-solid fa-gauge" style="color:var(--success);"></i> พลังงานสะสม (D112 / D114):</span>
-                    <span class="power-val" style="color:var(--success);"><span id="acKwhVal">0.000</span> kWh (<span id="acTotalCostVal">0.00</span> บาท)</span>
-                </div>
-            </div>
-
-            <!-- AC Extra Buttons -->
-            <div class="ac-extra-features">
-                <button class="extra-btn" id="btnSwing" onclick="toggleACFeature('swing')"><i class="fa-solid fa-arrows-split-up-and-left"></i> SWING</button>
-                <button class="extra-btn" id="btnFan" onclick="cycleFanSpeed()"><i class="fa-solid fa-wind"></i> FAN: <span id="fanSpeedText">SPEED 2</span></button>
-                <button class="extra-btn" id="btnTurbo" onclick="toggleACFeature('turbo')"><i class="fa-solid fa-gauge-high"></i> TURBO</button>
-                <button class="extra-btn" id="btnLight" onclick="toggleACFeature('light')"><i class="fa-solid fa-lightbulb"></i> DISPLAY</button>
-                <button class="extra-btn" id="btnEco" onclick="toggleACFeature('eco')"><i class="fa-solid fa-leaf"></i> ECO</button>
-            </div>
-        </div>
-
-        <!-- Section 3: Ladder Monitor Box -->
-        <div class="section-title"><i class="fa-solid fa-desktop"></i> OMRON PLC LADDER DIAGRAM MONITOR</div>
-        <div class="system-log-box" id="liveLogContent">
-            <pre style="margin:0; font-family:inherit; color:#000000; font-weight:600;">[SYSTEM] Connecting to EMQX Broker...</pre>
-        </div>
-    </div>
-
-    <script>
-        const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
-        const TOPIC_CONTROL = 'santayanon/home/control';
-        const TOPIC_STATUS = 'santayanon/home/status';
-
-        let client;
-        let espTimeout = null;
-        let acDataState = { swing: false, fanSpeed: 2, turbo: false, light: true, eco: false };
-
-        try {
-            client = mqtt.connect(brokerUrl, {
-                clientId: 'web_sport_' + Math.random().toString(16).substr(2, 8),
-                clean: true,
-                connectTimeout: 5000,
-                reconnectPeriod: 2000,
-          
+    .sensor-box {
+      background: linear-gradient(135deg, #f8fafc, #ffffff);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
