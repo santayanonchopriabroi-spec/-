@@ -17,29 +17,47 @@
         .header h1 { font-size: 1.4rem; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 8px; }
         .live-badge { background: #ffffff; border: 1px solid #cbd5e1; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; font-weight: 600; }
         .indicator-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; display: inline-block; }
-        .live-badge.online { border-color: #86efac; color: #15803d; background: #f0fdf4; }
+        .live-badge.online { border-color: #86efac; color: #15803d; background: #f0fdf4; box-shadow: 0 0 10px rgba(34,197,94,0.2); }
         .live-badge.waiting { border-color: #fde047; color: #b45309; background: #fefce8; }
         
         .section-title { font-size: 0.95rem; color: #475569; margin-bottom: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
-        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 1rem; transition: all 0.2s ease; }
-        .card.active { border-color: #0ea5e9; box-shadow: 0 8px 16px rgba(14, 165, 233, 0.12); }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 1rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        
+        /* 🌟 เอฟเฟกต์แสงสะท้อนและเรืองแสง เมื่อการ์ดไฟเปิด (ACTIVE) */
+        .card.active { 
+            border-color: #0ea5e9; 
+            background: linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.22), inset 0 0 15px rgba(14, 165, 233, 0.08); 
+        }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
-        .icon-box { width: 42px; height: 42px; border-radius: 14px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #94a3b8; border: 1px solid #e2e8f0; }
-        .card.active .icon-box { background: #0ea5e9; color: #ffffff; }
+        .icon-box { width: 42px; height: 42px; border-radius: 14px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #94a3b8; border: 1px solid #e2e8f0; transition: 0.3s; }
+        
+        .card.active .icon-box { 
+            background: linear-gradient(135deg, #0ea5e9, #0284c7); 
+            color: #ffffff; 
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.6), inset 0 2px 4px rgba(255,255,255,0.4); 
+        }
         
         .advanced-switch { appearance: none; width: 52px; height: 28px; background: #cbd5e1; border-radius: 50px; position: relative; cursor: pointer; outline: none; transition: 0.3s; }
-        .advanced-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; background: #ffffff; border-radius: 50%; transition: 0.3s; }
-        .advanced-switch:checked { background: #0ea5e9; }
+        .advanced-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; background: #ffffff; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .advanced-switch:checked { background: #0ea5e9; box-shadow: 0 0 12px rgba(14, 165, 233, 0.5); }
         .advanced-switch:checked::after { left: calc(100% - 26px); }
-        .ac-switch:checked { background: #10b981 !important; }
+        .ac-switch:checked { background: #10b981 !important; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5) !important; }
         
         .card-title { font-size: 0.9rem; font-weight: 700; color: #1e293b; }
-        .card-status { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+        .card-status { font-size: 0.8rem; color: #64748b; font-weight: 500; transition: 0.3s; }
+        .card.active .card-status { color: #0284c7; font-weight: 600; text-shadow: 0 0 8px rgba(14,165,233,0.3); }
         
-        .ac-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 1.2rem; display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.5rem; }
-        .ac-card.active { border-color: #10b981; }
+        /* 🌟 เอฟเฟกต์แสงสะท้อนและเรืองแสง เมื่อการ์ดแอร์เปิด (ACTIVE) */
+        .ac-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 1.2rem; display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.5rem; transition: all 0.3s ease; position: relative; }
+        .ac-card.active { 
+            border-color: #10b981; 
+            background: linear-gradient(145deg, #ffffff 0%, #ecfdf5 100%);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.2), inset 0 0 20px rgba(16, 185, 129, 0.06); 
+        }
         .ac-top { display: flex; flex-direction: column; gap: 1.2rem; justify-content: space-between; align-items: center; }
 
         .tcl-indoor-unit {
@@ -49,50 +67,60 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.05), inset 0 2px 4px rgba(255,255,255,0.8);
             display: flex; flex-direction: column; justify-content: space-between; align-items: center;
             padding: 8px 12px 6px 12px;
+            transition: 0.3s;
+        }
+        .ac-card.active .tcl-indoor-unit {
+            border-color: #6ee7b7;
+            box-shadow: 0 10px 25px rgba(16,185,129,0.25), inset 0 2px 6px rgba(255,255,255,0.9), inset 0 0 10px rgba(16,185,129,0.2);
         }
         .tcl-brand-header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
         .tcl-logo-box { display: flex; align-items: center; gap: 6px; }
         .tcl-logo { font-size: 0.9rem; font-weight: 900; color: #dc2626; letter-spacing: 1px; font-family: 'Arial Black', sans-serif; }
         .tcl-btu-badge { background: #ef4444; color: #ffffff; font-size: 0.6rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; }
-        .tcl-digital-display { background: #0f172a; color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 4px; }
+        .tcl-digital-display { background: #0f172a; color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-family: monospace; font-weight: bold; display: flex; align-items: center; gap: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); }
         .tcl-vent-area { width: 100%; height: 34px; background: #1e293b; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #475569; box-shadow: inset 0 4px 6px rgba(0,0,0,0.6); }
         .crossflow-drum {
             width: 92%; height: 22px;
             background: repeating-linear-gradient(90deg, #334155, #334155 3px, #0f172a 3px, #0f172a 7px);
             border-radius: 10px; position: relative; transform-origin: center; opacity: 0.4; transition: opacity 0.3s;
         }
-        .ac-card.active .crossflow-drum { opacity: 1; animation: drumRotate 0.6s linear infinite; }
-        @keyframes drumRotate { 0% { filter: brightness(1); } 50% { filter: brightness(1.4); } 100% { filter: brightness(1); } }
+        .ac-card.active .crossflow-drum { opacity: 1; animation: drumRotate 0.6s linear infinite; filter: drop-shadow(0 0 4px #38bdf8); }
+        @keyframes drumRotate { 0% { filter: brightness(1); } 50% { filter: brightness(1.5); } 100% { filter: brightness(1); } }
         .airflow-container { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
         .ac-card.active .airflow-container { opacity: 1; }
-        .airflow-wave { font-size: 1rem; color: #38bdf8; animation: flow 0.9s ease-in-out infinite alternate; }
+        .airflow-wave { font-size: 1rem; color: #38bdf8; animation: flow 0.9s ease-in-out infinite alternate; text-shadow: 0 0 8px #38bdf8; }
         .airflow-wave:nth-child(2) { animation-delay: 0.2s; }
         .airflow-wave:nth-child(3) { animation-delay: 0.4s; }
         .airflow-wave:nth-child(4) { animation-delay: 0.6s; }
         @keyframes flow { 0% { transform: translateY(0) scale(0.9); opacity: 0.2; } 100% { transform: translateY(12px) scale(1.2); opacity: 1; } }
 
-        .ac-controls { display: flex; align-items: center; justify-content: space-around; gap: 0.8rem; background: #f8fafc; padding: 0.8rem 1rem; border-radius: 18px; width: 100%; flex-wrap: wrap; }
+        .ac-controls { display: flex; align-items: center; justify-content: space-around; gap: 0.8rem; background: #f8fafc; padding: 0.8rem 1rem; border-radius: 18px; width: 100%; flex-wrap: wrap; border: 1px solid #e2e8f0; }
         .real-temp-box, .target-temp-box { display: flex; flex-direction: column; align-items: center; }
         .real-temp-label, .target-temp-label { font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        .real-temp-value { font-size: 1.3rem; font-weight: 800; color: #f59e0b; }
-        .real-hum-value { font-size: 1.3rem; font-weight: 800; color: #0ea5e9; }
+        .real-temp-value { font-size: 1.3rem; font-weight: 800; color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.2); }
+        .real-hum-value { font-size: 1.3rem; font-weight: 800; color: #0ea5e9; text-shadow: 0 0 10px rgba(14,165,233,0.2); }
         .temp-group { display: flex; align-items: center; gap: 0.6rem; margin-top: 2px; }
-        .temp-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .temp-btn:active { background: #e2e8f0; }
+        .temp-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .temp-btn:active { background: #e2e8f0; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
         .temp-display { font-size: 1.3rem; font-weight: 800; color: #1e293b; min-width: 32px; text-align: center; }
 
         .power-monitor-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 8px; }
         .power-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 600; color: #475569; }
         .power-val { font-size: 1rem; font-weight: 800; color: #0284c7; }
-        .load-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 8px; overflow: hidden; }
-        .load-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #ef4444); transition: width 0.5s ease; }
+        .load-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .load-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #ef4444); transition: width 0.5s ease; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
 
         .ac-extra-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 1rem; }
-        .extra-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0.7rem; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .extra-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0.7rem; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.3s ease; }
         .extra-btn:active { transform: scale(0.98); }
-        .extra-btn.active { background: #10b981; color: #ffffff; border-color: #10b981; }
+        .extra-btn.active { 
+            background: linear-gradient(135deg, #10b981, #059669); 
+            color: #ffffff; 
+            border-color: #34d399; 
+            box-shadow: 0 0 12px rgba(16,185,129,0.4);
+        }
         
-        .system-log-box { background: #f8fafc; color: #000000; border-radius: 16px; padding: 0.8rem; font-family: 'Courier New', Courier, monospace; font-size: 0.72rem; line-height: 1.35; min-height: 250px; max-height: 420px; overflow-y: auto; overflow-x: auto; border: 2px solid #cbd5e1; -webkit-overflow-scrolling: touch; }
+        .system-log-box { background: #f8fafc; color: #000000; border-radius: 16px; padding: 0.8rem; font-family: 'Courier New', Courier, monospace; font-size: 0.72rem; line-height: 1.35; min-height: 250px; max-height: 420px; overflow-y: auto; overflow-x: auto; border: 2px solid #cbd5e1; -webkit-overflow-scrolling: touch; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         
         @media (min-width: 768px) {
             body { padding: 1rem; }
@@ -169,14 +197,14 @@
                 </div>
             </div>
 
-            <!-- กล่องแสดงมอนิเตอร์กระแส โหลด % พลังงาน kWh คิดเป็นเงินบาท และเพิ่มแสดงแรงดันไฟจริง -->
+            <!-- กล่องแสดงมอนิเตอร์ แรงดัน, กระแส, โหลด %, พลังงาน kWh และคิดเป็นเงินบาท -->
             <div class="power-monitor-card">
                 <div class="power-info-row">
-                    <span><i class="fa-solid fa-plug" style="color: #0284c7;"></i> แรงดันไฟฟ้าจริง (AC Voltage)</span>
-                    <span class="power-val" style="color: #0284c7;"><span id="acVoltVal">220.0</span> V</span>
+                    <span><i class="fa-solid fa-plug" style="color: #0284c7;"></i> แรงดัน</span>
+                    <span class="power-val" style="color: #0284c7;"><span id="acVoltVal">--</span> V</span>
                 </div>
                 <div class="power-info-row">
-                    <span><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> กระแสไฟฟ้าแอร์ (Current)</span>
+                    <span><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> กระแส</span>
                     <span class="power-val"><span id="acAmpVal">0.00</span> A</span>
                 </div>
                 <div class="power-info-row" style="font-size: 0.78rem;">
@@ -220,45 +248,4 @@
 
         let client;
         let espTimeout = null;
-        let acDataState = { swing: false, fanSpeed: 2, turbo: false, light: true, eco: false };
-
-        try {
-            client = mqtt.connect(brokerUrl, {
-                clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-                clean: true,
-                connectTimeout: 5000,
-                reconnectPeriod: 2000,
-                keepalive: 30
-            });
-        } catch (e) { console.error(e); }
-
-        if (client) {
-            client.on('connect', () => { client.subscribe(TOPIC_STATUS); });
-            client.on('offline', () => setOfflineUI('ขาดการเชื่อมต่อเครือข่าย'));
-            client.on('error', () => setOfflineUI('เกิดข้อผิดพลาดในการเชื่อมต่อ'));
-
-            client.on('message', (topic, payload) => {
-                if (topic === TOPIC_STATUS) {
-                    clearTimeout(espTimeout);
-                    setConnectedUI();
-
-                    espTimeout = setTimeout(() => { setOfflineUI('บอร์ด ESP32 ออฟไลน์'); }, 8000);
-
-                    try {
-                        const data = JSON.parse(payload.toString());
-
-                        if (data.ac) {
-                            acDataState.swing = !!data.ac.swing;
-                            acDataState.fanSpeed = data.ac.fanSpeed || 2;
-                            acDataState.turbo = !!data.ac.turbo;
-                            acDataState.light = data.ac.light !== undefined ? data.ac.light : true;
-                            acDataState.eco = !!data.ac.eco;
-                            updateACUI();
-                        }
-
-                        if (data.lights) {
-                            for (let i = 0; i < 5; i++) {
-                                const state = !!data.lights[i];
-                                document.getElementById('light' + (i + 1)).checked = state;
-                                const card = document.getElementById('card-light' + (i + 1));
-                                const statusText = document.getElementBy
+        let acDataState = { swing: false, fanSpeed: 2, turbo: false, light: 
