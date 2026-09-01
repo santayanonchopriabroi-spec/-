@@ -1,1 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Global HMI - ESP32 Miner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #0f172a; color: #f8fafc; text-align: center; margin: 0; padding: 20px; }
+    .container { max-width: 450px; margin: 0 auto; }
+    .card { background: #1e293b; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
+    h1 { color: #f7931a; }
+    .label { font-size: 13px; color: #94a3b8; text-transform: uppercase; }
+    .value { font-size: 28px; font-weight: bold; color: #38bdf8; margin-top: 5px;}
+    .status { font-size: 14px; color: #4ade80; }
+    .conn-status { font-size: 12px; color: #ef4444; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ GLOBAL HMI MINER</h1>
+    <div class="card">
+      <div class="label">Hashrate สด</div>
+      <div class="value" id="hashrate">0.00 kH/s</div>
+    </div>
+    <div class="card">
+      <div class="label">จำนวน Hash สะสม</div>
+      <div class="value" id="total">0</div>
+    </div>
+    <div class="card">
+      <div class="label">สถานะระบบ ESP32</div>
+      <div class="status" id="status">Waiting for data...</div>
+    </div>
+    <div class="conn-status" id="cloud-status">Cloud WebSockets: Connecting...</div>
+  </div>
 
+  <script>
+    // ** ต้องตั้งค่า MQTT_TOPIC ให้ตรงกับในโค้ด ESP32 **
+    const MQTT_TOPIC = "esp32miner/hmi/my_secret_id_999"; 
+
+    // เชื่อมต่อ HiveMQ Cloud ผ่าน WebSockets
+    const client = new Paho.MQTT.Client("broker.hivemq.com", 8443, "web_" + parseInt(Math.random() * 100, 10));
+
+    client.onConnectionLost = function (responseObject) {
+      document.getElementById("cloud-status").innerText = "Cloud Disconnected. Retrying...";
+      document.getElementById("cloud-status").style.color = "#ef4444";
+      setTimeout(connectCloud, 3000);
+    };
+
+    client.onMessageArrived = function (message) {
+      try {
+        const data = JSON.parse(message.payloadString);
+        document.getElementById("hashrate").innerText = data.hashrate + " kH/s";
+        document.getElementById("total").innerText = data.total;
+        document.getElementById("status").innerText = data.status;
+      } catch (e) {
+        console.log("JSON Parse Error");
+      }
+    };
+
+    function connectCloud() {
+      client.connect({
+        useSSL: true,
+        onSuccess: function () {
+          document.getElementById("cloud-status").innerText = "Cloud WebSockets: ONLINE";
+          document.getElementById("cloud-status").style.color = "#4ade80";
+          client.subscribe(MQTT_TOPIC); // ดึงข้อมูลจาก Topic
+        }
+      });
+    }
+    
+    connectCloud();
+  </script>
+</body>
+</html>
