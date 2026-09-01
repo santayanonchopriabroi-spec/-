@@ -3,68 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Global HMI - ESP32 Miner</title>
+  <title>Bitcoin Miner HMI</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
   <style>
-    body { font-family: sans-serif; background: #0f172a; color: #f8fafc; text-align: center; margin: 0; padding: 20px; }
-    .container { max-width: 450px; margin: 0 auto; }
-    .card { background: #1e293b; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
-    h1 { color: #f7931a; }
-    .label { font-size: 13px; color: #94a3b8; text-transform: uppercase; }
-    .value { font-size: 28px; font-weight: bold; color: #38bdf8; margin-top: 5px;}
-    .status { font-size: 14px; color: #4ade80; }
-    .conn-status { font-size: 12px; color: #ef4444; margin-top: 10px; }
+    /* ตั้งค่าพื้นหลังสีขาวล้วน และฟอนต์ที่ดูทันสมัย */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ffffff; color: #333333; text-align: center; margin: 0; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; }
+    
+    /* โลโก้เวกเตอร์ ไม่แตกเมื่อขยาย 4K */
+    .logo svg { width: 90px; height: 90px; margin-bottom: 10px; }
+    h1 { color: #f7931a; margin-top: 0; font-size: 26px; text-transform: uppercase; letter-spacing: 1px;}
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    .card { background: #f8f9fa; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
+    .card-full { grid-column: span 2; }
+    
+    .label { font-size: 13px; color: #6c757d; font-weight: 600; }
+    .value { font-size: 28px; font-weight: bold; color: #212529; margin-top: 8px;}
+    .highlight { color: #f7931a; }
+    
+    .status-box { font-size: 15px; font-weight: 600; padding: 12px; border-radius: 8px; margin-top: 10px;}
+    .status-online { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+    .status-offline { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7;}
+    
+    .section-title { text-align: left; font-size: 14px; font-weight: bold; color: #495057; margin-bottom: 10px; border-bottom: 2px solid #dee2e6; padding-bottom: 5px;}
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>⚡ GLOBAL HMI MINER</h1>
-    <div class="card">
-      <div class="label">Hashrate สด</div>
-      <div class="value" id="hashrate">0.00 kH/s</div>
+    <!-- โลโก้ Bitcoin แบบ SVG (ความละเอียดสููงสุด) -->
+    <div class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#f7931a" d="M16 32C7.163 32 0 24.837 0 16S7.163 0 16 0s16 7.163 16 16-7.163 16-16 16zm7.905-15.013c.48-3.197-1.93-4.912-5.187-6.04l1.066-4.285-2.607-.648-1.037 4.168c-.686-.17-1.393-.33-2.1-.482l1.04-4.18-2.604-.648-1.065 4.28c-.573-.133-1.135-.262-1.68-.396l.002-.01-3.606-.897-.696 2.802s1.943.436 1.9.47c1.06.264 1.25.965 1.218 1.517l-1.226 4.927c.078.02.176.05.284.097l-.288-.07-1.72 6.915c-.144.337-.506.84-1.207.665.034.04-1.904-.474-1.904-.474l-1.3 3.037 3.414.85c.633.158 1.27.32 1.897.475l-1.077 4.336 2.604.648 1.064-4.284c.712.19 1.405.368 2.083.53l-1.06 4.267 2.606.648 1.077-4.327c4.27.81 7.487.485 8.766-3.327.973-2.905-.094-4.577-2.1-5.674 1.498-.344 2.624-1.347 2.92-3.412zm-3.39 6.002c-.822 3.307-6.384 1.52-8.188 1.072l1.472-5.918c1.803.45 7.568.75 6.716 4.846zm.56-5.43c-.753 3.032-5.38.15-6.883-.223l1.328-5.337c1.503.374 6.326.89 5.555 5.56z"/></svg>
     </div>
-    <div class="card">
-      <div class="label">จำนวน Hash สะสม</div>
-      <div class="value" id="total">0</div>
+    <h1>BITCOIN MINER HMI</h1>
+    
+    <div class="grid">
+      <div class="card card-full">
+        <div class="label">ความแรงในการขุด (Hashrate)</div>
+        <div class="value highlight" id="hashrate">0.00 kH/s</div>
+      </div>
+      
+      <div class="card">
+        <div class="label">จำนวนการขุดสะสม</div>
+        <div class="value" id="total">0</div>
+      </div>
+      
+      <div class="card">
+        <div class="label">ขุดสำเร็จ / เหรียญที่ได้</div>
+        <div class="value" id="shares">0</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="label">สถานะระบบ ESP32</div>
-      <div class="status" id="status">Waiting for data...</div>
+
+    <div class="section-title">SYSTEM STATUS</div>
+    <div class="card card-full" style="padding: 15px;">
+      <div class="label" style="text-align: left; margin-bottom: 5px;">สถานะการทำงานบอร์ด ESP32</div>
+      <div class="status-box status-offline" id="board-status">รอรับข้อมูลจากบอร์ด...</div>
+      
+      <div class="label" style="text-align: left; margin-top: 15px; margin-bottom: 5px;">สถานะเชื่อมต่อเว็บไซต์กับระบบคลาวด์</div>
+      <div class="status-box status-offline" id="cloud-status">กำลังเชื่อมต่อ...</div>
     </div>
-    <div class="conn-status" id="cloud-status">Cloud WebSockets: Connecting...</div>
   </div>
 
   <script>
-    // ** ต้องตั้งค่า MQTT_TOPIC ให้ตรงกับในโค้ด ESP32 **
     const MQTT_TOPIC = "esp32miner/hmi/my_secret_id_999"; 
+    const client = new Paho.MQTT.Client("broker.hivemq.com", 8443, "hmi_web_" + parseInt(Math.random() * 1000, 10));
 
-    // เชื่อมต่อ HiveMQ Cloud ผ่าน WebSockets
-    const client = new Paho.MQTT.Client("broker.hivemq.com", 8443, "web_" + parseInt(Math.random() * 100, 10));
-
+    // เมื่อขาดการเชื่อมต่อกับคลาวด์
     client.onConnectionLost = function (responseObject) {
-      document.getElementById("cloud-status").innerText = "Cloud Disconnected. Retrying...";
-      document.getElementById("cloud-status").style.color = "#ef4444";
-      setTimeout(connectCloud, 3000);
+      const cloudEl = document.getElementById("cloud-status");
+      cloudEl.innerText = "ขาดการเชื่อมต่อคลาวด์ (กำลังเชื่อมต่อใหม่...)";
+      cloudEl.className = "status-box status-offline";
+      
+      const boardEl = document.getElementById("board-status");
+      boardEl.innerText = "ไม่สามารถเช็กสถานะบอร์ดได้";
+      boardEl.className = "status-box status-offline";
+      
+      setTimeout(connectCloud, 3000); // พยายามต่อใหม่ทุก 3 วินาที
     };
 
+    // เมื่อได้รับข้อมูลจาก ESP32
     client.onMessageArrived = function (message) {
       try {
         const data = JSON.parse(message.payloadString);
         document.getElementById("hashrate").innerText = data.hashrate + " kH/s";
-        document.getElementById("total").innerText = data.total;
-        document.getElementById("status").innerText = data.status;
+        document.getElementById("total").innerText = data.total.toLocaleString(); // ใส่จุลภาคให้ตัวเลข
+        document.getElementById("shares").innerText = data.shares + " ครั้ง";
+        
+        const boardEl = document.getElementById("board-status");
+        boardEl.innerText = data.status;
+        if(data.status.includes("Active")) {
+          boardEl.className = "status-box status-online";
+        } else {
+          boardEl.className = "status-box status-offline";
+        }
       } catch (e) {
         console.log("JSON Parse Error");
       }
     };
 
+    // ฟังก์ชันเชื่อมต่อคลาวด์
     function connectCloud() {
       client.connect({
         useSSL: true,
         onSuccess: function () {
-          document.getElementById("cloud-status").innerText = "Cloud WebSockets: ONLINE";
-          document.getElementById("cloud-status").style.color = "#4ade80";
-          client.subscribe(MQTT_TOPIC); // ดึงข้อมูลจาก Topic
+          const cloudEl = document.getElementById("cloud-status");
+          cloudEl.innerText = "เชื่อมต่อระบบคลาวด์สำเร็จ (ONLINE)";
+          cloudEl.className = "status-box status-online";
+          client.subscribe(MQTT_TOPIC); 
         }
       });
     }
